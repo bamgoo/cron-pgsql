@@ -3,6 +3,7 @@ package cron_pgsql
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/bamgoo/bamgoo"
 	"github.com/bamgoo/cron"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -210,28 +212,26 @@ func (c *pgsqlConnection) History(jobName string, offset, limit int) (int64, []c
 }
 
 func (c *pgsqlConnection) Lock(key string, ttl time.Duration) (bool, error) {
-	if ttl <= 0 {
-		ttl = time.Second
-	}
+	_ = ttl
 
-	var locked bool
+	var one int
 	err := c.pool.QueryRow(context.Background(),
 		fmt.Sprintf(
-			`WITH upsert AS (
-				INSERT INTO %s (name, expired_at, updated_at)
-				VALUES ($1, now() + ($2 || ' seconds')::interval, now())
-				ON CONFLICT (name) DO UPDATE
-				SET expired_at = now() + ($2 || ' seconds')::interval,
-					updated_at = now()
-				WHERE %s.expired_at <= now()
-				RETURNING 1
-			)
-			SELECT EXISTS(SELECT 1 FROM upsert)`,
-			c.locksTableSQL(), c.locksTableSQL(),
+			`INSERT INTO %s (name, expired_at, updated_at)
+			 VALUES ($1, now(), now())
+			 ON CONFLICT (name) DO NOTHING
+			 RETURNING 1`,
+			c.locksTableSQL(),
 		),
-		key, int64(ttl.Seconds()),
-	).Scan(&locked)
-	return locked, err
+		key,
+	).Scan(&one)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+	return false, err
 }
 
 func (c *pgsqlConnection) ensureSchema() error {
