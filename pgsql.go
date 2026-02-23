@@ -105,6 +105,28 @@ func (c *pgsqlConnection) Add(name string, job cron.Job) error {
 	return err
 }
 
+func (c *pgsqlConnection) Enable(name string) error {
+	_, err := c.pool.Exec(context.Background(),
+		fmt.Sprintf(
+			`UPDATE %s SET data = jsonb_set(data, '{disabled}', 'false'::jsonb, true), updated_at = now() WHERE name = $1`,
+			c.jobsTableSQL(),
+		),
+		name,
+	)
+	return err
+}
+
+func (c *pgsqlConnection) Disable(name string) error {
+	_, err := c.pool.Exec(context.Background(),
+		fmt.Sprintf(
+			`UPDATE %s SET data = jsonb_set(data, '{disabled}', 'true'::jsonb, true), updated_at = now() WHERE name = $1`,
+			c.jobsTableSQL(),
+		),
+		name,
+	)
+	return err
+}
+
 func (c *pgsqlConnection) Remove(name string) error {
 	tx, err := c.pool.Begin(context.Background())
 	if err != nil {
