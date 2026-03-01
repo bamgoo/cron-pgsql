@@ -1,50 +1,46 @@
 # cron-pgsql
 
-`cron-pgsql` 是 `cron` 模块的 `pgsql` 驱动。
+`cron-pgsql` 是 `github.com/infrago/cron` 的**pgsql 驱动**。
 
-## 安装
+## 包定位
 
-```bash
-go get github.com/infrago/cron@latest
-go get github.com/infrago/cron-pgsql@latest
-```
+- 类型：驱动
+- 作用：把 `cron` 模块的统一接口落到 `pgsql` 后端实现
 
-## 接入
+## 快速接入
 
 ```go
 import (
     _ "github.com/infrago/cron"
     _ "github.com/infrago/cron-pgsql"
-    "github.com/infrago/infra"
 )
-
-func main() {
-    infra.Run()
-}
 ```
-
-## 配置示例
 
 ```toml
 [cron]
 driver = "pgsql"
 ```
 
-## 公开 API（摘自源码）
+## `setting` 专用配置项
 
-- `func (d *pgsqlDriver) Connection(inst *cron.Instance) (cron.Connection, error)`
-- `func (c *pgsqlConnection) Open() error`
-- `func (c *pgsqlConnection) Close() error`
-- `func (c *pgsqlConnection) Add(name string, job cron.Job) error`
-- `func (c *pgsqlConnection) Enable(name string) error`
-- `func (c *pgsqlConnection) Disable(name string) error`
-- `func (c *pgsqlConnection) Remove(name string) error`
-- `func (c *pgsqlConnection) List() (map[string]cron.Job, error)`
-- `func (c *pgsqlConnection) AppendLog(log cron.Log) error`
-- `func (c *pgsqlConnection) History(jobName string, offset, limit int) (int64, []cron.Log, error)`
-- `func (c *pgsqlConnection) Lock(key string, ttl time.Duration) (bool, error)`
+配置位置：`[cron].setting`
 
-## 排错
+- `schema`
+- `jobs_table`
+- `logs_table`
+- `locks_table`
+- `dsn`
+- `url`
+- `host`
+- `port`
+- `username`
+- `user`
+- `password`
+- `database`
+- `dbname`
+- `sslmode`
 
-- driver 未生效：确认模块段 `driver` 值与驱动名一致
-- 连接失败：检查 endpoint/host/port/鉴权配置
+## 说明
+
+- `setting` 仅对当前驱动生效，不同驱动键名可能不同
+- 连接失败时优先核对 `setting` 中 host/port/认证/超时等参数
