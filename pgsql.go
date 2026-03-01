@@ -10,15 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bamgoo/bamgoo"
-	"github.com/bamgoo/cron"
+	"github.com/infrago/infra"
+	"github.com/infrago/cron"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func init() {
-	bamgoo.Register("pgsql", &pgsqlDriver{})
-	bamgoo.Register("postgres", &pgsqlDriver{})
+	infra.Register("pgsql", &pgsqlDriver{})
+	infra.Register("postgres", &pgsqlDriver{})
 }
 
 type (

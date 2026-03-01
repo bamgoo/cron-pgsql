@@ -1,2 +1,2 @@
 # cron-pgsql
-bamgoo postgresql cron driver.
+infrago postgresql cron driver.
